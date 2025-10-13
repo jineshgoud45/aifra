@@ -1,0 +1,49 @@
+# Production Requirements Lock File
+# SIH 2025 PS 25190
+# 
+# This file contains exact version pins for all dependencies.
+# Generated from requirements.txt for production deployments.
+# For reproducible builds, use: pip install -r requirements.lock
+#
+# To regenerate: pip freeze > requirements.lock
+#
+# Last updated: 2025-10-13
+
+# Core data processing
+pandas==2.0.3
+numpy==1.24.4
+
+# Simulator dependencies
+scipy==1.10.1
+matplotlib==3.7.3
+
+# AI/ML Ensemble
+torch==2.0.1
+torchvision==0.15.2
+scikit-learn==1.3.2
+Pillow==10.0.1
+
+# Web Dashboard
+streamlit==1.28.2
+plotly==5.17.0
+seaborn==0.12.2
+
+# PDF Report Generation
+reportlab==4.0.7
+
+# Edge Deployment (ONNX)
+onnx==1.14.1
+onnxruntime==1.15.1
+
+# Security and XML parsing
+defusedxml==0.7.1
+lxml==4.9.3
+
+# Configuration management
+python-dotenv==1.0.0
+
+# Progress tracking
+tqdm==4.66.1
+
+# NOTE: Use this file for production deployments
+# For development, use requirements.txt and requirements-dev.txt

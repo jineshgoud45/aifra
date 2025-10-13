@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  fra-diagnostics:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fra-diagnostics
+    ports:
+      - "8501:8501"
+    environment:
+      - FRA_LOG_LEVEL=INFO
+      - FRA_MODEL_DIR=/app/models
+      - FRA_TEMP_DIR=/app/temp
+      - FRA_DATA_DIR=/app/data
+      - FRA_LOG_DIR=/app/logs
+      - FRA_ENABLE_PROFILING=false
+      - FRA_REQUIRE_AUTH=false
+    volumes:
+      # Mount models directory for persistence
+      - ./models:/app/models:ro
+      # Mount logs directory
+      - ./logs:/app/logs
+      # Mount temp directory
+      - ./temp:/app/temp
+      # Mount data directory for uploaded files
+      - ./data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8501/_stcore/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - fra-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+        reservations:
+          cpus: '1'
+          memory: 2G
+
+networks:
+  fra-network:
+    driver: bridge

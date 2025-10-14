@@ -1142,7 +1142,7 @@ def generate_synthetic_dataset(
     logger.info("Transformer FRA Synthetic Data Generator")
     logger.info("SIH 2025 PS 25190")
     logger.info("="*70)
-    logger.info()
+    logger.info("")
     
     # Initialize simulator
     simulator = TransformerSimulator(seed=42)

@@ -11,6 +11,8 @@ Production-ready dashboard integrating:
 - PDF report generation
 """
 
+from __future__ import annotations  # Enable lazy type hint evaluation
+
 __all__ = [
     'load_ai_models',
     'get_parser', 
@@ -43,7 +45,7 @@ import uuid
 from typing import Tuple, Optional, Dict
 from pathlib import Path
 import re
-from streamlit.uploaded_file_manager import UploadedFile
+from streamlit.runtime.uploaded_file_manager import UploadedFile
 
 # Import centralized configuration
 try:
@@ -104,17 +106,156 @@ logger = logging.getLogger(__name__)
 # Ensure temp directory exists
 os.makedirs(TEMP_DIR, exist_ok=True)
 
-# Import project modules
+# Import lightweight project modules (fast imports)
 try:
     from parser import UniversalFRAParser
-    from simulator import TransformerSimulator
-    from ai_ensemble import load_models, FRAEnsemble
     from report_generator import generate_iec_report
     from utils import create_bode_plot_plotly, validate_fra_data, compute_frequency_bands
 except ImportError as e:
     st.error(f"Error importing modules: {e}")
     logger.error(f"Import error: {e}", exc_info=True)
     st.stop()
+
+# Note: Heavy imports (ai_ensemble, simulator) are lazy-loaded when needed
+# This makes the app start much faster (1-2s instead of 10-20s)
+
+# AUTO-TRAINING: Global state for training
+_training_lock = threading.Lock()
+_training_in_progress = False
+
+
+def check_models_exist() -> bool:
+    """
+    Check if all required AI model files exist.
+    
+    Returns:
+        bool: True if all models exist, False otherwise
+    """
+    required_files = [
+        'cnn_model.pth',
+        'resnet_model.pth',
+        'svm_model.pkl',
+        'feature_extractor.pkl',
+        'fault_mapping.pkl'
+    ]
+    
+    models_path = Path(MODEL_DIR)
+    
+    # Check if models directory exists
+    if not models_path.exists():
+        logger.info(f"Models directory does not exist: {models_path}")
+        return False
+    
+    # Check if all required model files exist
+    for model_file in required_files:
+        file_path = models_path / model_file
+        if not file_path.exists():
+            logger.info(f"Missing model file: {model_file}")
+            return False
+    
+    logger.info("All model files found")
+    return True
+
+
+def auto_train_models() -> bool:
+    """
+    Automatically train AI models if they don't exist.
+    
+    This function generates synthetic training data and trains all ensemble models.
+    It runs on first app launch when models are missing.
+    
+    Returns:
+        bool: True if training succeeded, False otherwise
+    """
+    global _training_in_progress
+    
+    # Prevent concurrent training
+    if _training_in_progress:
+        st.warning("⏳ Model training already in progress. Please wait...")
+        return False
+    
+    with _training_lock:
+        _training_in_progress = True
+        
+        try:
+            # Create necessary directories
+            models_dir = Path(MODEL_DIR)
+            synthetic_dir = Path('synthetic_data')
+            
+            models_dir.mkdir(parents=True, exist_ok=True)
+            synthetic_dir.mkdir(parents=True, exist_ok=True)
+            
+            logger.info("=" * 70)
+            logger.info("AUTO-TRAINING: Models not found - starting training...")
+            logger.info("=" * 70)
+            
+            # Show progress in UI
+            st.info("🤖 **First-time setup**: AI models not found. Starting automatic training...")
+            st.warning("⏰ This may take 10-30 minutes. Please keep this page open.")
+            
+            progress_bar = st.progress(0, text="Step 1/2: Generating synthetic training data...")
+            
+            # Step 1: Generate synthetic data (smaller dataset for faster training)
+            logger.info("Generating synthetic training data...")
+            try:
+                from simulator import TransformerSimulator, generate_synthetic_dataset
+                train_df, test_df = generate_synthetic_dataset(
+                    n_samples=2000,  # Smaller dataset for faster first-time training
+                    output_dir='synthetic_data',
+                    export_formats=False,
+                    visualize=False
+                )
+                
+                progress_bar.progress(30, text=f"Step 1/2: Generated {len(train_df)} training samples ✓")
+                logger.info(f"Generated {len(train_df)} training samples, {len(test_df)} test samples")
+                
+            except Exception as e:
+                logger.error(f"Failed to generate training data: {e}")
+                st.error(f"❌ Failed to generate training data: {e}")
+                return False
+            
+            # Step 2: Train models
+            progress_bar.progress(40, text="Step 2/2: Training AI models (CNN, ResNet, SVM)...")
+            logger.info("Training ensemble models...")
+            
+            try:
+                from ai_ensemble import train_ensemble_pipeline
+                ensemble = train_ensemble_pipeline(
+                    train_df=train_df,
+                    test_df=test_df,
+                    num_epochs_cnn=20,  # Reduced epochs for faster training
+                    num_epochs_resnet=10,
+                    batch_size=32,
+                    device=None,
+                    save_dir=MODEL_DIR
+                )
+                
+                progress_bar.progress(100, text="Step 2/2: Training complete ✓")
+                
+            except Exception as e:
+                logger.error(f"Failed to train models: {e}")
+                st.error(f"❌ Failed to train models: {e}")
+                return False
+            
+            logger.info("=" * 70)
+            logger.info("AUTO-TRAINING: Successfully trained and saved all models!")
+            logger.info("=" * 70)
+            
+            # Show success message
+            st.success("✅ AI models trained successfully! The app is now ready for fault detection.")
+            st.balloons()
+            time.sleep(2)  # Brief pause to show success message
+            
+            return True
+                
+        except Exception as e:
+            logger.error(f"AUTO-TRAINING: Unexpected error: {e}", exc_info=True)
+            st.error(f"❌ Auto-training failed: {e}")
+            st.info("💡 **Manual alternative**: Run `python quick_train_models.py` in terminal")
+            return False
+        
+        finally:
+            _training_in_progress = False
 
 
 # Page configuration
@@ -183,11 +324,18 @@ def load_ai_models() -> FRAEnsemble:
         FRAEnsemble: Loaded ensemble model
         
     Raises:
-        Exception: If model loading fails
+        FileNotFoundError: If model files are missing
     """
+    # Check if models exist (fast check, doesn't block)
+    if not check_models_exist():
+        raise FileNotFoundError(
+            "AI model files not found. Please train the models first."
+        )
+    
     # CRITICAL FIX: Prevent race condition during concurrent loads
     with _model_load_lock:
         logger.info("Loading AI ensemble models with thread safety...")
+        from ai_ensemble import load_models
         return load_models(MODEL_DIR)
 
 
@@ -202,6 +350,7 @@ def get_parser():
 def get_simulator():
     """Get simulator for baseline generation (cached)."""
     logger.info("Initializing transformer simulator")
+    from simulator import TransformerSimulator
     return TransformerSimulator(seed=42)
 
 
@@ -725,20 +874,20 @@ def main():
         
         st.markdown("""
         ### 📖 Quick Guide
-        1. Upload FRA data file (.csv, .xml, .txt)
-        2. Select vendor format (or auto-detect)
-        3. Review analysis results
-        4. Download PDF report
+        1. **Upload**: Select your FRA measurement file
+        2. **Parse**: System automatically detects format and parses data
+        3. **QA Check**: IEC 60076-18 compliance verification
+        4. **AI Analysis**: Multi-model ensemble classifies fault type
+        5. **Visualization**: Interactive Bode plots and frequency analysis
+        6. **Report**: Download comprehensive PDF report
         
-        ### ℹ️ About
-        - **Standard**: IEC 60076-18
-        - **AI Models**: Ensemble (CNN + ResNet + SVM)
-        - **Faults**: 6 types detected
-        
-        ### 🔍 Session Info
-        **Request ID**: `{}`
-        """.format(request_id))
-    
+        ### Supported File Formats
+        - **Omicron FRANEO**: CSV and XML formats
+        - **Doble SFRA**: Standard format
+        - **Megger FRAX**: Proprietary format
+        - **Generic**: Standard CSV with frequency, magnitude, phase columns
+        """)
+
     # File upload section
     st.header("📁 Upload FRA Data")
     
@@ -794,29 +943,66 @@ def main():
                 # AI Prediction
                 st.subheader("🤖 AI Fault Classification")
                 
-                try:
-                    logger.info(f"[{request_id}] Loading AI models...")
-                    ensemble = load_ai_models()
+                # Check if models exist before trying to load
+                if not check_models_exist():
+                    st.warning("⚠️ **AI models not found**")
+                    st.info("""
+                    AI fault detection requires trained models. You have two options:
                     
-                    logger.info(f"[{request_id}] Running AI inference...")
-                    inference_start = time.time()
+                    **Option 1 (Recommended):** Auto-train models now
+                    - Takes 10-30 minutes
+                    - Trains with 2000 samples
+                    - Click button below to start
                     
-                    prediction = ensemble.predict(df)
+                    **Option 2:** Manual training
+                    - Run in terminal: `python quick_train_models.py`
+                    - Trains with 5000 samples (better accuracy)
+                    - Allows you to see detailed progress
+                    """)
                     
-                    inference_time = time.time() - inference_start
-                    logger.info(
-                        f"[{request_id}] AI prediction completed in {inference_time:.2f}s: "
-                        f"{prediction['predicted_fault']} (confidence: {prediction['confidence']:.2%})"
-                    )
+                    # Add training button
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        if st.button("🚀 Start Auto-Training Now", type="primary", use_container_width=True):
+                            st.info("Starting training... This may take 10-30 minutes.")
+                            with st.spinner("Training in progress..."):
+                                if auto_train_models():
+                                    st.success("✅ Training complete! Refresh the page to use AI predictions.")
+                                    st.balloons()
+                                else:
+                                    st.error("Training failed. Check logs for details.")
                     
-                    # Display prediction results
-                    st.write("Predicted Fault:", prediction['predicted_fault'])
-                    st.write("Confidence:", prediction['confidence'])
+                    with col2:
+                        st.info("💡 **Tip:** You can continue using other features while models are being trained manually.")
                     
-                except Exception as e:
-                    logger.error(f"[{request_id}] AI model inference failed: {e}", exc_info=True)
-                    st.warning("⚠️ AI model not available. Showing data analysis only.")
+                    # Skip AI prediction but continue with other features
                     prediction = None
+                    
+                else:
+                    # Models exist, load and run prediction
+                    try:
+                        logger.info(f"[{request_id}] Loading AI models...")
+                        ensemble = load_ai_models()
+                        
+                        logger.info(f"[{request_id}] Running AI inference...")
+                        inference_start = time.time()
+                        
+                        prediction = ensemble.predict(df)
+                        
+                        inference_time = time.time() - inference_start
+                        logger.info(
+                            f"[{request_id}] AI prediction completed in {inference_time:.2f}s: "
+                            f"{prediction['predicted_fault']} (confidence: {prediction['confidence']:.2%})"
+                        )
+                        
+                        # Display prediction results
+                        st.write("Predicted Fault:", prediction['predicted_fault'])
+                        st.write("Confidence:", prediction['confidence'])
+                        
+                    except Exception as e:
+                        logger.error(f"[{request_id}] AI model inference failed: {e}", exc_info=True)
+                        st.warning("⚠️ AI model not available. Showing data analysis only.")
+                        prediction = None
                 
                 # Display results
                 st.subheader("📊 Diagnostic Results")

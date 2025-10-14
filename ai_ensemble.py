@@ -93,7 +93,8 @@ class FRADataset(Dataset):
         dataframe: pd.DataFrame,
         mode: str = 'sequence',
         transform: Optional[callable] = None,
-        augment: bool = False
+        augment: bool = False,
+        max_length: int = 1000
     ):
         """
         Initialize FRA dataset.
@@ -103,10 +104,12 @@ class FRADataset(Dataset):
             mode: 'sequence' for 1D CNN, 'image' for ResNet
             transform: Optional transform for images
             augment: Whether to apply data augmentation
+            max_length: Maximum sequence length (pad/truncate to this)
         """
         self.mode = mode
         self.transform = transform
         self.augment = augment
+        self.max_length = max_length
         
         # Get unique samples
         self.sample_ids = dataframe['sample_id'].unique()
@@ -116,7 +119,7 @@ class FRADataset(Dataset):
         self.fault_types = sorted(dataframe['fault_type'].unique())
         self.fault_to_idx = {fault: idx for idx, fault in enumerate(self.fault_types)}
         self.idx_to_fault = {idx: fault for fault, idx in self.fault_to_idx.items()}
-        
+    
     def __len__(self):
         return len(self.sample_ids)
     
@@ -139,6 +142,16 @@ class FRADataset(Dataset):
             
             # Stack as 3-channel sequence (like RGB for 1D)
             sequence = np.stack([freq_norm, mag, phase], axis=0)
+            
+            # FIX: Pad or truncate to fixed length for batching
+            current_length = sequence.shape[1]
+            if current_length < self.max_length:
+                # Pad with zeros
+                padding = np.zeros((3, self.max_length - current_length))
+                sequence = np.concatenate([sequence, padding], axis=1)
+            elif current_length > self.max_length:
+                # Truncate to max_length
+                sequence = sequence[:, :self.max_length]
             
             # Data augmentation
             if self.augment:
@@ -580,8 +593,8 @@ def prepare_data_loaders(
     else:
         transform = None
     
-    train_dataset = FRADataset(train_df, mode=mode, transform=transform, augment=True)
-    test_dataset = FRADataset(test_df, mode=mode, transform=transform, augment=False)
+    train_dataset = FRADataset(train_df, mode=mode, transform=transform, augment=True, max_length=1000)
+    test_dataset = FRADataset(test_df, mode=mode, transform=transform, augment=False, max_length=1000)
     
     train_loader = DataLoader(
         train_dataset,
@@ -830,11 +843,11 @@ class FRAEnsemble:
             Dictionary with prediction results
         """
         # Prepare data
-        dataset_seq = FRADataset(sample_df, mode='sequence')
+        dataset_seq = FRADataset(sample_df, mode='sequence', max_length=1000)
         dataset_img = FRADataset(sample_df, mode='image', transform=transforms.Compose([
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.5], std=[0.5])
-        ]))
+        ]), max_length=1000)
         
         # CNN prediction
         seq_data, _ = dataset_seq[0]

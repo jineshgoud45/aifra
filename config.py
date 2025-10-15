@@ -1,4 +1,10 @@
+"""
+Configuration Management for FRA Diagnostics Platform
+SIH 2025 PS 25190
 
+Centralized configuration for all constants, settings, and parameters.
+Use environment variables for deployment-specific overrides.
+"""
 __all__ = [
     'str_to_bool',
     'IECStandards',

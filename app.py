@@ -1,4 +1,15 @@
+"""
+Streamlit Web Application for Transformer FRA Diagnostics
+SIH 2025 PS 25190
 
+Production-ready dashboard integrating:
+- Multi-vendor FRA data parsing
+- AI ensemble fault classification
+- Interactive visualizations
+- IEC 60076-18 compliance checking
+- Explainability and anomaly detection
+- PDF report generation
+"""
 
 from __future__ import annotations  # Enable lazy type hint evaluation
 

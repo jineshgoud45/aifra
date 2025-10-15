@@ -15,7 +15,7 @@
 
 ---
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/FzC_YIjqDT4" frameborder="0" allowfullscreen></iframe>
+[![Watch the video](https://img.youtube.com/vi/FzC_YIjqDT4/hqdefault.jpg)](https://youtu.be/FzC_YIjqDT4)
 
 ## 📋 Table of Contents
 

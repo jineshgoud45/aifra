@@ -432,7 +432,7 @@ This project is licensed under the **MIT License** - see [LICENSE](LICENSE) file
 
 - **Issues**: [GitHub Issues](https://github.com/jineshgoud45/fra-diagnostics/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/jineshgoud45/fra-diagnostics/discussions)
-- **Email**: 23eg109a16@anurag.edu.in
+- **Email**: 23eg109a16@anurag.edu.in OR 24eg509a01@anurag.edu.in
 
 ---
 

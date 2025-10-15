@@ -423,7 +423,7 @@ BREAKING CHANGE: predict() now returns dict instead of tuple"
 **Do NOT** open public issues for security vulnerabilities.
 
 Instead:
-1. Email: 23eg109a16@anurag.edu.in
+1. Email: 23eg109a16@anurag.edu.in OR 24eg509a01@anurag.edu.in
 2. Include detailed description
 3. Provide proof of concept if possible
 4. Allow reasonable time for fix before disclosure
@@ -453,7 +453,7 @@ Contributors will be:
 
 - **Discord**: [Join our server](#)
 - **Discussions**: [GitHub Discussions](https://github.com/jineshgoud45/fra-diagnostics/discussions)
-- **Email**: 23eg109a16@anurag.edu.in
+- **Email**: 23eg109a16@anurag.edu.in OR 24eg509a01@anurag.edu.in
 
 ---
 

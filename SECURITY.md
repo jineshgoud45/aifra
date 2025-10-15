@@ -18,6 +18,8 @@ Instead, please report them to our security team:
 ### Preferred Method
 
 Email: **23eg109a16@anurag.edu.in**
+                (OR)
+       **24eg509a01@anurag.edu.in**         
 
 ### What to Include
 

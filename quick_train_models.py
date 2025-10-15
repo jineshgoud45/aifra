@@ -3,7 +3,6 @@
 Quick Model Training Script
 Generates synthetic data and trains AI models for FRA fault detection
 """
-
 import os
 import sys
 from pathlib import Path

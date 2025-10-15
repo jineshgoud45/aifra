@@ -15,7 +15,7 @@
 
 ---
 
-[![Watch the video](https://img.youtube.com/vi/FzC_YIjqDT4/maxresdefault.jpg)](https://www.youtube.com/watch?v=YOUR_VIDEO_ID)
+<iframe width="560" height="315" src="https://www.youtube.com/embed/FzC_YIjqDT4" frameborder="0" allowfullscreen></iframe>
 
 ## 📋 Table of Contents
 

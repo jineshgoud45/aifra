@@ -17,7 +17,7 @@ Instead, please report them to our security team:
 
 ### Preferred Method
 
-Email: **23eg109a16@anurag.edu.in**
+Email: **23eg109a16@anurag.edu.in** OR **24eg509a01@anurag.edu.in**
 
 ### What to Include
 
@@ -143,7 +143,7 @@ Security updates are released as:
 Subscribe to:
 - GitHub Security Advisories
 - Release notifications
-- Security mailing list (23eg109a16@anurag.edu.in)
+- Security mailing list (23eg109a16@anurag.edu.in) OR (24eg509a01@anurag.edu.in)
 
 ## Bug Bounty
 
@@ -163,8 +163,8 @@ This project aims to comply with:
 
 ## Contact
 
-- **Security issues**: 23eg109a16@anurag.edu.in
-- **General questions**: 23eg109a16@anurag.edu.in
+- **Security issues**: 23eg109a16@anurag.edu.in OR 24eg509a01@anurag.edu.in
+- **General questions**: 23eg109a16@anurag.edu.in OR 24eg509a01@anurag.edu.in
 - **GitHub Security Advisory**: Use GitHub's private reporting
 
 ---

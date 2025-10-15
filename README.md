@@ -15,6 +15,8 @@
 
 ---
 
+[![Watch the video](https://img.youtube.com/vi/FzC_YIjqDT4/maxresdefault.jpg)](https://www.youtube.com/watch?v=YOUR_VIDEO_ID)
+
 ## 📋 Table of Contents
 
 - [Features](#-features)

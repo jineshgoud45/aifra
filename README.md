@@ -15,7 +15,7 @@
 
 ---
 
-[![Watch the video](https://img.youtube.com/vi/FzC_YIjqDT4/hqdefault.jpg)](https://youtu.be/FzC_YIjqDT4)
+[![Watch the video](https://raw.githubusercontent.com/jineshgoud45/aifra/main/assets/thumbnail.png)](https://youtu.be/FzC_YIjqDT4)
 
 ## 📋 Table of Contents
 

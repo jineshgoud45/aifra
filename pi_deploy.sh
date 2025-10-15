@@ -142,7 +142,6 @@ sudo apt-get install -y \
     libatlas-base-dev \
     libjpeg-dev \
     zlib1g-dev
-
 echo -e "${GREEN}✓ System dependencies installed${NC}"
 
 # Create virtual environment

@@ -423,7 +423,7 @@ BREAKING CHANGE: predict() now returns dict instead of tuple"
 **Do NOT** open public issues for security vulnerabilities.
 
 Instead:
-1. Email: security@example.com
+1. Email: 23eg109a16@anurag.edu.in.com
 2. Include detailed description
 3. Provide proof of concept if possible
 4. Allow reasonable time for fix before disclosure
